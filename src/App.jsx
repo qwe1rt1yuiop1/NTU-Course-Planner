@@ -1,8 +1,6 @@
 import { useState } from 'react'
 import GitHubCorner from 'react-github-corner'
 
-<GitHubCorner href="https://github.com/qwe1rt1yuiop1/NTU-Course-Planner" />
-
 export default function App() {
   // 四年上下學期
   const years = [112, 113, 114, 115, 116, 117, 118] // 大一~大七，學年多加幾年
@@ -396,6 +394,7 @@ const handleImport = (e) => {
 
   return (
 
+
     <div style={{
       display: 'flex',
       flexDirection: 'column',
@@ -407,6 +406,7 @@ const handleImport = (e) => {
       gap: '0rem',
       fontSize: '10px',
     }}>
+<GitHubCorner href="https://github.com/qwe1rt1yuiop1/NTU-Course-Planner" />
 <div style={{ marginBottom: '1rem' }}>
   <button
     onClick={handleExport}
