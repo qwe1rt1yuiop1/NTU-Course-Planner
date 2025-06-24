@@ -1,4 +1,7 @@
 import { useState } from 'react'
+import GitHubCorner from 'react-github-corner'
+
+<GitHubCorner href="https://github.com/qwe1rt1yuiop1/NTU-Course-Planner" />
 
 export default function App() {
   // 四年上下學期
