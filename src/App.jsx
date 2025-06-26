@@ -420,6 +420,9 @@ const handleImport = (e) => {
     onChange={handleImport}
     style={{ fontSize: '10px' }}
   />
+<p style={{ fontSize: '12px', marginTop: '6px' }}>
+    使用說明等資訊請前往右上角 github corner
+  </p>
 </div>
       {/* 查詢區 */}
       <div style={{
