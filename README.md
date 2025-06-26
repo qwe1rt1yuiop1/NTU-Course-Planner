@@ -16,7 +16,7 @@
 
 ## 畫面預覽
 
-![畫面預覽](Screenshot 2025-06-26 at 11-20-33 NTU Course Planner.png)
+![畫面預覽](preview.png)
 
 ## 開發者使用方式（本機執行）
 
