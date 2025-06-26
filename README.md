@@ -1,12 +1,37 @@
-# React + Vite
+# NTU Course Planner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Currently, two official plugins are available:
+這是一個為臺灣大學學生設計的課表規劃工具，使用 Vite + React 打造，支援跨學期課程管理、別名命名、課程屬性學分統計，並支援 JSON 匯入匯出。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+線上使用（免安裝）：https://ntu-course-planner.vercel.app/
 
-## Expanding the ESLint configuration
+用戶每次搜尋課程時，會串接 [臺大新課程網](https://course.ntu.edu.tw/) 的 API，自動搜尋該學期符合關鍵字的第一個結果。用戶可選擇：
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- 加入哪一個學期
+- 指定課程屬性（例如「通識」、「資訊系必修」）
+- 客製化課程別名（例如「DSA」取代「資料結構與演算法」）
+
+---
+
+## 畫面預覽
+
+---
+
+## 開發者使用方式（本機執行）
+
+```bash
+git clone https://github.com/qwe1rt1yuiop1/NTU-Course-Planner
+cd NTU-Course-Planner
+npm install
+npm run dev
+```
+
+歡迎大家隨時發 Issue 或 Pull Request，參與改進這個專案！
+
+---
+
+## License
+
+本專案採用 [MIT License](LICENSE)
+
