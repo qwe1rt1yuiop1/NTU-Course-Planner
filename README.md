@@ -2,7 +2,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-這是一個為臺灣大學學生設計的課表規劃工具，很多課程每年都會開，上課時間不太會改變，學生可以提前規劃、避免衝堂，但一直盯著 Excel 拉時間、比對學分數真的太累了。這個工是使用 Vite + React 打造，支援跨學期課程管理、別名命名、課程屬性學分統計，並支援 JSON 匯入匯出。
+這是一個為臺灣大學學生設計的課表規劃工具，很多課程每年都會開，上課時間不太會改變，學生可以提前規劃、避免衝堂，但一直盯著 Excel 拉時間、比對學分數真的太累了。這個工具是使用 Vite + React 打造，支援跨學期課程管理、別名命名、課程屬性學分統計，並支援 JSON 匯入匯出。
 
 線上使用（免安裝）：https://ntu-course-planner.vercel.app/
 
