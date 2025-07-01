@@ -1,7 +1,23 @@
 import { useState } from 'react'
+import { useEffect } from 'react'
 import GitHubCorner from 'react-github-corner'
 
 export default function App() {
+
+useEffect(() => {
+  try {
+    const raw = localStorage.getItem('ntuCoursePlannerBackup')
+    if (!raw) return
+    const saved = JSON.parse(raw)
+    if (saved?.schedules && saved?.allAttributes) {
+      setSchedules(saved.schedules)
+      setAllAttributes(saved.allAttributes)
+    }
+  } catch (e) {
+    console.error('讀取 localStorage 資料失敗', e)
+  }
+}, [])
+
   // 四年上下學期
   const years = [112, 113, 114, 115, 116, 117, 118] // 大一~大七，學年多加幾年
   const semesterKeys = years.flatMap(y => [`${y}-1`, `${y}-2`])
@@ -19,11 +35,14 @@ export default function App() {
 
   const [semester, setSemester] = useState('113-2') // 查詢學期用輸入框改成字串
   const [serial, setSerial] = useState('')
-  const [course, setCourse] = useState(null)
+  const [course, setCourse] = useState([])
   const [alias, setAlias] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [semesterSelect, setSemesterSelect] = useState('113-2') // 加入課表學期
+
+  const [aliases, setAliases] = useState([])
+  const [selectedAttributesList, setSelectedAttributesList] = useState([])
 
   const [schedules, setSchedules] = useState(() => {
     const init = {}
@@ -65,7 +84,7 @@ export default function App() {
 
   const handleSearch = async () => {
     setLoading(true)
-    setCourse(null)
+    setCourse([])
     setAlias('')
     setSelectedAttributes(new Set())
     setError('')
@@ -116,8 +135,11 @@ export default function App() {
       if (data.totalCount === 0) {
         setError('查無課程資料')
       } else {
-        setCourse(data.courses[0])
-        setAlias(data.courses[0].name)
+
+    const topCourses = data.courses.slice(0, 4)
+    setCourse(topCourses)
+    setAliases(topCourses.map(c => c.name))
+    setSelectedAttributesList(topCourses.map(() => new Set()))
       }
     } catch (e) {
       setError('查詢失敗，請稍後再試')
@@ -141,7 +163,7 @@ export default function App() {
 	  return attr;
 	})
     setAllAttributes(updatedAttributes);
-    setCourse(null)
+    setCourse([])
     setAlias('')
     setSelectedAttributes(new Set())
   }
@@ -356,11 +378,33 @@ const renderCourseList = (schedule, semesterKey) => (
     })
   }
 
+const saveToLocalStorage = () => {
+  const data = { schedules, allAttributes }
+  localStorage.setItem('ntuCoursePlannerBackup', JSON.stringify(data))
+  alert('已儲存到瀏覽器，下次載入將會繼承此版本')
+}
+
+const exportToJson = () => {
+  const data = { schedules, allAttributes }
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'schedule_backup.json'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 const handleExport = () => {
   const data = {
     schedules,
     allAttributes,
   }
+
+  // 儲存到 localStorage
+  localStorage.setItem('ntuCoursePlannerBackup', JSON.stringify(data))
+
+  // 同時觸發下載 JSON
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
@@ -394,7 +438,6 @@ const handleImport = (e) => {
 
   return (
 
-
     <div style={{
       display: 'flex',
       flexDirection: 'column',
@@ -409,10 +452,25 @@ const handleImport = (e) => {
 <GitHubCorner href="https://github.com/qwe1rt1yuiop1/NTU-Course-Planner" />
 <div style={{ marginBottom: '1rem' }}>
   <button
-    onClick={handleExport}
-    style={{ marginRight: 10, padding: '4px 8px', fontSize: '10px' }}
+  onClick={exportToJson}
+  style={{ marginRight: 10, padding: '4px 8px', fontSize: '10px' }}
   >
-    存檔（下載 JSON）
+  下載 json 備份檔
+  </button>
+  <button
+  onClick={saveToLocalStorage}
+  style={{ marginRight: 10, padding: '4px 8px', fontSize: '10px' }}
+  >
+  儲存到瀏覽器
+  </button>
+  <button
+  onClick={() => {
+    localStorage.removeItem('ntuCoursePlannerBackup') 	
+    alert('已清除儲存資料，請重新整理頁面')
+  }}
+  style={{ marginRight: 10, padding: '4px 8px', fontSize: '10px' }}
+  >
+  清除瀏覽器儲存資料
   </button>
   <input
     type="file"
@@ -422,6 +480,8 @@ const handleImport = (e) => {
   />
 <p style={{ fontSize: '12px', marginTop: '6px' }}>
     使用說明等資訊請前往右上角 github corner
+    <br />
+    2025/7/1 新增功能：搜尋展示最多 4 個結果、瀏覽器 local storage 使用
   </p>
 </div>
       {/* 查詢區 */}
@@ -582,83 +642,117 @@ const handleImport = (e) => {
         </div>
 
         {/* 查詢結果區塊 */}
-        {course && (
-          <div style={{
-            fontSize: '10px',
-            padding: '6px 8px',
-            border: '1px solid #ddd',
-            borderRadius: 4,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-            width: 'fit-content',
-            maxWidth: 400,
-          }}>
-            <div><strong>{course.name}</strong></div>
-            <div>{course.identifier}&emsp;{course.credits} 學分</div>
-            <div>
-              <strong>教師：</strong>{course.teacher?.name || '無資料'}&emsp;
-              <strong>時間：</strong>{formatSchedule(course.schedules)}
-            </div>
-            <div style={{ marginTop: 8 }}>
-              <label htmlFor="alias">別名： </label>
-              <input
-                id="alias"
-                type="text"
-                value={alias}
-                onChange={e => setAlias(e.target.value)}
-                style={{ fontSize: '10px', padding: 2, width: '100%' }}
-                placeholder="若填寫，加入後列表會用此名稱"
-              />
-            </div>
-            <div style={{ marginTop: 8 }}>
-              <label htmlFor="semesterSelect">加入學期：</label>
-              <select
-                id="semesterSelect"
-                value={semesterSelect}
-                onChange={e => setSemesterSelect(e.target.value)}
-                style={{ fontSize: '10px', padding: 2 }}
-              >
-                {semesterKeys.map(s => (
-                  <option key={s} value={s}>{semesterLabel(s)}</option>
-                ))}
-              </select>
-            </div>
 
-          <fieldset style={{ border: '1px solid #aaa', padding: 6, fontSize: '10px', marginBottom: 8 }}>
-            <legend>課程屬性（多選）</legend>
-            <div style={{ maxHeight: 80, overflowY: 'auto' }}>
-              {allAttributes.length === 0 ? (
-                <p style={{ fontSize: '9px', color: '#888' }}>請先在上方新增屬性</p>
-              ) : (
-                allAttributes.map((attr, i) => (
-                  <label key={i} style={{ display: 'block', userSelect: 'none' }}>
-                    <input
-                      type="checkbox"
-                      checked={selectedAttributes.has(attr.name)}
-                      onChange={() => toggleAttributeSelect(attr.name)}
-                      style={{ marginRight: 4 }}
-                    />
-                    {attr.name}
-                  </label>
-                ))
-              )}
-            </div>
-          </fieldset>
-            <button
-              onClick={handleAddCourse}
-              style={{
-                marginTop: 8,
-                width: '100%',
-                padding: '6px 8px',
-                fontSize: '10px',
-                backgroundColor: '#388e3c',
-                color: 'white',
-                border: 'none',
-                borderRadius: 3,
-                cursor: 'pointer',
-              }}
-            >加入課表</button>
-          </div>
+{course.length > 0 && course.map((c, idx) => (
+  <div key={idx} style={{
+    fontSize: '10px',
+    padding: '6px 8px',
+    border: '1px solid #ddd',
+    borderRadius: 4,
+    boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+    width: 'fit-content',
+    maxWidth: 400,
+    marginBottom: '1rem',
+  }}>
+    <div><strong>{c.name}</strong></div>
+    <div>{c.identifier}&emsp;{c.credits} 學分</div>
+    <div>
+      <strong>教師：</strong>{c.teacher?.name || '無資料'}&emsp;
+      <strong>時間：</strong>{formatSchedule(c.schedules)}
+    </div>
+    <div style={{ marginTop: 8 }}>
+      <label>別名：</label>
+      <input
+        type="text"
+        value={aliases[idx]}
+        onChange={e => {
+          const updated = [...aliases]
+          updated[idx] = e.target.value
+          setAliases(updated)
+        }}
+        style={{ fontSize: '10px', padding: 2, width: '100%' }}
+      />
+    </div>
+    <div style={{ marginTop: 8 }}>
+      <label>加入學期：</label>
+      <select
+        value={semesterSelect}
+        onChange={e => setSemesterSelect(e.target.value)}
+        style={{ fontSize: '10px', padding: 2 }}
+      >
+        {semesterKeys.map(s => (
+          <option key={s} value={s}>{semesterLabel(s)}</option>
+        ))}
+      </select>
+    </div>
+    <fieldset style={{ border: '1px solid #aaa', padding: 6, fontSize: '10px', marginBottom: 8 }}>
+      <legend>課程屬性（多選）</legend>
+      <div style={{ maxHeight: 80, overflowY: 'auto' }}>
+        {allAttributes.length === 0 ? (
+          <p style={{ fontSize: '9px', color: '#888' }}>請先在上方新增屬性</p>
+        ) : (
+          allAttributes.map((attr, i) => (
+            <label key={i} style={{ display: 'block', userSelect: 'none' }}>
+              <input
+                type="checkbox"
+                checked={selectedAttributesList[idx].has(attr.name)}
+                onChange={() => {
+                  const newList = [...selectedAttributesList]
+                  const attrSet = new Set(newList[idx])
+                  if (attrSet.has(attr.name)) {
+                    attrSet.delete(attr.name)
+                  } else {
+                    attrSet.add(attr.name)
+                  }
+                  newList[idx] = attrSet
+                  setSelectedAttributesList(newList)
+                }}
+              />
+              {attr.name}
+            </label>
+          ))
         )}
+      </div>
+    </fieldset>
+    <button
+      onClick={() => {
+        const newCourse = {
+          ...c,
+          alias: aliases[idx].trim() || c.name,
+          attributes: Array.from(selectedAttributesList[idx])
+        }
+        setSchedules(prev => {
+          const updated = { ...prev }
+          updated[semesterSelect] = [...updated[semesterSelect], newCourse]
+          return updated
+        })
+        const updatedAttributes = allAttributes.map(attr => {
+          if (selectedAttributesList[idx].has(attr.name)) {
+            return {
+              ...attr,
+              earnedCredits: attr.earnedCredits + c.credits
+            }
+          }
+          return attr
+        })
+        setAllAttributes(updatedAttributes)
+      }}
+      style={{
+        marginTop: 8,
+        width: '100%',
+        padding: '6px 8px',
+        fontSize: '10px',
+        backgroundColor: '#388e3c',
+        color: 'white',
+        border: 'none',
+        borderRadius: 3,
+        cursor: 'pointer',
+      }}
+    >
+      加入課表
+    </button>
+  </div>
+))}
       </div>
 
       {/* 多學年度課表區 */}
